@@ -8,7 +8,7 @@
     "./reader": "./src/reader.ts",
     "./config": "./src/config.ts"
   },
-  "files": ["src", "templates", "README.md"],
+  "files": ["src", "templates", "README.md", "MIGRATING.md"],
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
