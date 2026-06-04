@@ -10,6 +10,15 @@ What's shared: the Keystatic config (schema + admin), the content types, and the
 read API. What stays per-site: rendering (your components) and a few values
 (repo, brand name, enabled fields).
 
+## Which guide do I follow?
+
+- **Starting fresh (no blog yet)** → you're in the right place; follow this
+  README top to bottom.
+- **Your repo already has an inline Keystatic blog** → see
+  **[MIGRATING.md](./MIGRATING.md)** instead — a one-off path for converting an
+  existing in-repo blog (mostly reconciling your current content to the canonical
+  schema). Most new projects don't need it.
+
 ## Requirements
 
 Next.js **App Router** (15+), React 18/19. Peer deps (installed in the site):
@@ -62,7 +71,25 @@ export const blog = createBlogReader(config);
 ```
 
 ```tsx
-// src/app/blog/[slug]/page.tsx  (static generation)
+// src/app/blog/page.tsx  (index — lists every post, newest first)
+import { blog } from "@/lib/blog";
+
+export default async function BlogIndex() {
+  const posts = await blog.getAllPosts();
+  return (
+    <ul>
+      {posts.map((p) => (
+        <li key={p.slug}>
+          <a href={`/blog/${p.slug}`}>{p.title}</a> — {p.excerpt}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+// src/app/blog/[slug]/page.tsx  (detail — static generation)
 import { blog } from "@/lib/blog";
 
 export const dynamicParams = false;
@@ -83,7 +110,23 @@ Every post has the common fields (`title`, `excerpt`, `publishedAt`,
 `seoDescription`). Disabled features come back empty/null. Site-specific
 `extraFields` are available untyped on `post.fields` (e.g. `post.fields.readingTime`).
 
-## 3. Storage / login
+## 3. Create content
+
+In dev, open **`/keystatic`**, click **New post**, and it writes the files for
+you. Or hand-author them — the on-disk layout is:
+
+```
+content/
+  posts/<slug>.mdoc      # one flat file per post (NOT <slug>/index.mdoc)
+  authors/<slug>.yaml    # one per author (when the `author` feature is on)
+public/blog/
+  covers/  authors/      # cover images / author avatars
+```
+
+Each post is Markdoc: YAML frontmatter (the schema fields) + body. `title` is the
+slug; `publishedAt` and `excerpt` are required.
+
+## 4. Storage / login
 
 - **Dev:** `local` automatically — admin writes files in the repo, no
   credentials needed.

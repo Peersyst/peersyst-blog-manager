@@ -6,6 +6,10 @@ This guide is for a site that **already has a Keystatic blog implemented inline*
 sites. You keep your **blog pages, styling, and content**; only the CMS layer
 (Keystatic config + reader + types) becomes the package.
 
+> **New project with no blog yet?** You don't need this file — follow the
+> [README](./README.md) instead. This guide is the one-off case: a repo that
+> already started an inline Keystatic blog.
+
 > Hand this whole file to the agent doing the migration. It stands alone — no
 > other context needed.
 
