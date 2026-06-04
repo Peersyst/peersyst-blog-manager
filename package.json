@@ -1,0 +1,35 @@
+{
+  "name": "peersyst-blog-manager",
+  "version": "0.1.0",
+  "description": "Shared Keystatic blog CMS for Peersyst websites — one authoring experience, per-site fields and styling.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./reader": "./src/reader.ts",
+    "./config": "./src/config.ts"
+  },
+  "files": ["src", "templates", "README.md"],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@keystatic/core": ">=0.5.50",
+    "@keystatic/next": ">=5.0.4",
+    "@markdoc/markdoc": ">=0.5.0",
+    "next": ">=15",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@keystatic/core": "^0.5.50",
+    "@keystatic/next": "^5.0.4",
+    "@markdoc/markdoc": "^0.5.7",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "next": "^16.2.6",
+    "react": "^19",
+    "react-dom": "^19",
+    "server-only": "^0.0.1",
+    "typescript": "^5.7.0"
+  }
+}
