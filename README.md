@@ -16,7 +16,7 @@ Next.js **App Router** (15+), React 18/19. Peer deps (installed in the site):
 
 ```bash
 npm install @keystatic/core @keystatic/next @markdoc/markdoc
-npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.0"
+npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.1"
 ```
 
 > Free, no registry: it's pulled straight from GitHub. Bump the tag (`#v0.2.0`,
@@ -104,6 +104,12 @@ Every post has the common fields (`title`, `excerpt`, `publishedAt`,
    storage mode is gated (see `storage: "auto"`).
 4. **Bulk-migrated images** render on the site but show as "Choose file" / raw
    markdown in the editor; only assets uploaded through Keystatic are "managed".
+5. **The reader is server-only.** Import `createBlogReader` from
+   `peersyst-blog-manager/reader` (it pulls `node:fs`), never from the package
+   root, and never into a `"use client"` file. The root barrel intentionally
+   exports only `createBlogConfig` + types so it stays safe for the client
+   Keystatic admin — pulling the reader into a client path breaks the build with
+   a `node:fs` chunking error.
 
 ## Versioning
 
