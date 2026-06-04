@@ -9,7 +9,7 @@ sites. You keep your **blog pages, styling, and content**; only the CMS layer
 > Hand this whole file to the agent doing the migration. It stands alone — no
 > other context needed.
 
-- **Package repo:** `Peersyst/peersyst-blog-manager` (private)
+- **Package repo:** `Peersyst/peersyst-blog-manager` (public — installs anonymously, no auth)
 - **Consume:** the latest release tag — **`v0.1.1`** at time of writing
 - **Requires:** Next.js App Router (15+), the Keystatic peer deps
 
@@ -52,7 +52,7 @@ names** — your existing content must line up with it (see step 6).
 
 ## Steps
 
-### 1. Install (private repo → the install machine needs GitHub access)
+### 1. Install (public repo → no token/auth needed, anywhere)
 ```bash
 npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.1"
 ```
@@ -136,10 +136,11 @@ chunk → the reader leaked into a client import. Keep it server-only (the
   `KEYSTATIC_GITHUB_CLIENT_SECRET` / `KEYSTATIC_SECRET` are set (connect the
   Keystatic GitHub App from `/keystatic`). Each site uses its **own** App → its
   own login → no content mixing between sites.
-- **Deploy caveat:** `peersyst-blog-manager` is a **private** git dependency, so
-  the deploy host (e.g. Vercel) needs GitHub access to it at build time — grant
-  the host's GitHub integration access to the package repo, or provide a deploy
-  key / token in the build environment.
+- **Deploy:** `peersyst-blog-manager` is a **public** git dependency, so it
+  installs anonymously over HTTPS — no tokens, deploy keys, or registry. Vercel
+  and other CI build it with no extra access configuration. (npm normalizes the
+  lockfile URL to `git+ssh`, but falls back to HTTPS automatically when no SSH
+  key is present — verified against an SSH-less install.)
 
 ## Gotchas (already handled in the package — don't undo them)
 - `@keystar/ui` must be ≥ 0.7.20 (current `@keystatic/core` pulls it) or the

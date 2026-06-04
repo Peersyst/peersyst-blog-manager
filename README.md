@@ -19,7 +19,8 @@ npm install @keystatic/core @keystatic/next @markdoc/markdoc
 npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.1"
 ```
 
-> Free, no registry: it's pulled straight from GitHub. Bump the tag (`#v0.2.0`,
+> Free, public, no registry: it's pulled straight from GitHub (no token/auth,
+> installs anonymously on any CI). Bump the tag (`#v0.2.0`,
 > …) to roll out schema changes to a site.
 
 This package ships TypeScript source, so transpile it in **`next.config.ts`**:
