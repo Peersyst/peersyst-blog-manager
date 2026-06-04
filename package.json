@@ -1,6 +1,6 @@
 {
   "name": "peersyst-blog-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared Keystatic blog CMS for Peersyst websites — one authoring experience, per-site fields and styling.",
   "type": "module",
   "exports": {
