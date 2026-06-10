@@ -10,15 +10,6 @@ What's shared: the Keystatic config (schema + admin), the content types, and the
 read API. What stays per-site: rendering (your components) and a few values
 (repo, brand name, enabled fields).
 
-## Which guide do I follow?
-
-- **Starting fresh (no blog yet)** → you're in the right place; follow this
-  README top to bottom.
-- **Your repo already has an inline Keystatic blog** → see
-  **[MIGRATING.md](./MIGRATING.md)** instead — a one-off path for converting an
-  existing in-repo blog (mostly reconciling your current content to the canonical
-  schema). Most new projects don't need it.
-
 ## Requirements
 
 Next.js **App Router** (15+), React 18/19. Peer deps (installed in the site):
