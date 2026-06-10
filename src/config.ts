@@ -40,12 +40,16 @@ const DEFAULT_FEATURES: Required<BlogFeatures> = {
 function shouldUseGithub(mode: CreateBlogConfigOptions["storage"]): boolean {
   if (mode === "local") return false;
   if (mode === "github") return true;
-  return (
-    process.env.NODE_ENV === "production" &&
-    !!process.env.KEYSTATIC_GITHUB_CLIENT_ID &&
-    !!process.env.KEYSTATIC_GITHUB_CLIENT_SECRET &&
-    !!process.env.KEYSTATIC_SECRET
-  );
+  // "auto": gate on a NEXT_PUBLIC_ var so the SERVER (route handler / reader) and
+  // the CLIENT (Keystatic admin SPA) resolve the SAME storage kind. This config
+  // is bundled into BOTH runtimes. Server-only vars (KEYSTATIC_GITHUB_CLIENT_ID /
+  // _SECRET, KEYSTATIC_SECRET) are `undefined` in the browser, so gating on them
+  // makes the client fall back to "local" while the server picks "github" — that
+  // mismatch breaks the admin with "Unable to load collection … 'Not Found' is
+  // not valid JSON" the moment an editor opens a collection. The GitHub App slug
+  // is part of Keystatic's standard github env set and IS inlined client-side, so
+  // both runtimes agree on it.
+  return !!process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG;
 }
 
 /**

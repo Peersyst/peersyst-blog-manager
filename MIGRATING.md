@@ -6,11 +6,15 @@ This guide is for a site that **already has a Keystatic blog implemented inline*
 sites. You keep your **blog pages, styling, and content**; only the CMS layer
 (Keystatic config + reader + types) becomes the package.
 
+> **New project with no blog yet?** You don't need this file — follow the
+> [README](./README.md) instead. This guide is the one-off case: a repo that
+> already started an inline Keystatic blog.
+
 > Hand this whole file to the agent doing the migration. It stands alone — no
 > other context needed.
 
-- **Package repo:** `Peersyst/peersyst-blog-manager` (private)
-- **Consume:** the latest release tag — **`v0.1.1`** at time of writing
+- **Package repo:** `Peersyst/peersyst-blog-manager` (public — installs anonymously, no auth)
+- **Consume:** the latest release tag — **`v0.2.0`** at time of writing
 - **Requires:** Next.js App Router (15+), the Keystatic peer deps
 
 ---
@@ -52,11 +56,13 @@ names** — your existing content must line up with it (see step 6).
 
 ## Steps
 
-### 1. Install (private repo → the install machine needs GitHub access)
+### 1. Install (public repo → no token/auth needed, anywhere)
 ```bash
-npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.1"
+npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.2.0"
 ```
-Use **`v0.1.1`** or later — `v0.1.0` had a client-bundling bug.
+Use **`v0.2.0`** or later — it fixes a server/client storage-mode mismatch that
+broke the GitHub-mode admin ("Unable to load collection"); earlier tags also had
+a client-bundling bug (`v0.1.0`).
 
 ### 2. `next.config` — transpile it (the package ships TS source)
 ```ts
@@ -131,15 +137,31 @@ chunk → the reader leaked into a client import. Keep it server-only (the
 ---
 
 ## Storage & deploy
-- **Dev** uses `local` storage automatically (no credentials).
-- **Prod** uses GitHub PR-based editing once `KEYSTATIC_GITHUB_CLIENT_ID` /
-  `KEYSTATIC_GITHUB_CLIENT_SECRET` / `KEYSTATIC_SECRET` are set (connect the
-  Keystatic GitHub App from `/keystatic`). Each site uses its **own** App → its
-  own login → no content mixing between sites.
-- **Deploy caveat:** `peersyst-blog-manager` is a **private** git dependency, so
-  the deploy host (e.g. Vercel) needs GitHub access to it at build time — grant
-  the host's GitHub integration access to the package repo, or provide a deploy
-  key / token in the build environment.
+- **Dev** uses `local` storage automatically (no credentials) — the admin writes
+  files straight into your working tree.
+- **Prod (GitHub PR mode)** turns on when **`NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`**
+  is set. The package gates the storage kind on that var on purpose: it's the one
+  credential visible to BOTH the server route handler and the in-browser admin, so
+  both resolve `github` (gating on the server-only secrets alone desyncs them and
+  breaks the admin with "Unable to load collection" — fixed in v0.2.0). Set the
+  full Keystatic env set on the host:
+  - `NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` — flips the package to github mode
+  - `KEYSTATIC_GITHUB_CLIENT_ID` · `KEYSTATIC_GITHUB_CLIENT_SECRET` · `KEYSTATIC_SECRET`
+
+  Until the slug is set it stays `local`, so builds never break. Each site uses its
+  **own** App → its own login → no content mixing.
+- **Create the GitHub App manually** — the in-product "Connect to GitHub" wizard is
+  unreliable under Next 16 + `@keystatic/core@0.5.50`, so don't rely on it. At
+  `https://github.com/settings/apps/new`: set the callback URL to
+  `https://<your-domain>/api/keystatic/github/oauth/callback`, give it **Contents**
+  and **Pull requests** read/write on the site repo, then put the App **slug**,
+  **Client ID**, a generated **Client secret**, and a random `KEYSTATIC_SECRET` into
+  the four vars above. Keystatic's docs cover the App fields in detail.
+- **Deploy:** `peersyst-blog-manager` is a **public** git dependency, so it
+  installs anonymously over HTTPS — no tokens, deploy keys, or registry. Vercel
+  and other CI build it with no extra access configuration. (npm normalizes the
+  lockfile URL to `git+ssh`, but falls back to HTTPS automatically when no SSH
+  key is present — verified against an SSH-less install.)
 
 ## Gotchas (already handled in the package — don't undo them)
 - `@keystar/ui` must be ≥ 0.7.20 (current `@keystatic/core` pulls it) or the

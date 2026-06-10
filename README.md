@@ -10,16 +10,26 @@ What's shared: the Keystatic config (schema + admin), the content types, and the
 read API. What stays per-site: rendering (your components) and a few values
 (repo, brand name, enabled fields).
 
+## Which guide do I follow?
+
+- **Starting fresh (no blog yet)** → you're in the right place; follow this
+  README top to bottom.
+- **Your repo already has an inline Keystatic blog** → see
+  **[MIGRATING.md](./MIGRATING.md)** instead — a one-off path for converting an
+  existing in-repo blog (mostly reconciling your current content to the canonical
+  schema). Most new projects don't need it.
+
 ## Requirements
 
 Next.js **App Router** (15+), React 18/19. Peer deps (installed in the site):
 
 ```bash
 npm install @keystatic/core @keystatic/next @markdoc/markdoc
-npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.1.1"
+npm install "peersyst-blog-manager@github:Peersyst/peersyst-blog-manager#v0.2.0"
 ```
 
-> Free, no registry: it's pulled straight from GitHub. Bump the tag (`#v0.2.0`,
+> Free, public, no registry: it's pulled straight from GitHub (no token/auth,
+> installs anonymously on any CI). Bump the tag (`#v0.3.0`,
 > …) to roll out schema changes to a site.
 
 This package ships TypeScript source, so transpile it in **`next.config.ts`**:
@@ -58,10 +68,30 @@ import config from "../../keystatic.config";
 
 export const blog = createBlogReader(config);
 // blog.getAllPosts() · blog.getPostSlugs() · blog.getPost(slug)
+// getAllPosts({ withBody: true }) also renders each post's HTML body (e.g. for
+// reading-time estimates) — O(N) reads, fine for small blogs.
 ```
 
 ```tsx
-// src/app/blog/[slug]/page.tsx  (static generation)
+// src/app/blog/page.tsx  (index — lists every post, newest first)
+import { blog } from "@/lib/blog";
+
+export default async function BlogIndex() {
+  const posts = await blog.getAllPosts();
+  return (
+    <ul>
+      {posts.map((p) => (
+        <li key={p.slug}>
+          <a href={`/blog/${p.slug}`}>{p.title}</a> — {p.excerpt}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+// src/app/blog/[slug]/page.tsx  (detail — static generation)
 import { blog } from "@/lib/blog";
 
 export const dynamicParams = false;
@@ -82,14 +112,33 @@ Every post has the common fields (`title`, `excerpt`, `publishedAt`,
 `seoDescription`). Disabled features come back empty/null. Site-specific
 `extraFields` are available untyped on `post.fields` (e.g. `post.fields.readingTime`).
 
-## 3. Storage / login
+## 3. Create content
+
+In dev, open **`/keystatic`**, click **New post**, and it writes the files for
+you. Or hand-author them — the on-disk layout is:
+
+```
+content/
+  posts/<slug>.mdoc      # one flat file per post (NOT <slug>/index.mdoc)
+  authors/<slug>.yaml    # one per author (when the `author` feature is on)
+public/blog/
+  covers/  authors/      # cover images / author avatars
+```
+
+Each post is Markdoc: YAML frontmatter (the schema fields) + body. `title` is the
+slug; `publishedAt` and `excerpt` are required.
+
+## 4. Storage / login
 
 - **Dev:** `local` automatically — admin writes files in the repo, no
   credentials needed.
-- **Prod:** `github` once you connect the Keystatic GitHub App and set
-  `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`,
-  `KEYSTATIC_SECRET` on the host. Until then it falls back to `local` so builds
-  never break. Each site has its own App → its own login → no content mixing.
+- **Prod:** `github` turns on when **`NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG`** is
+  set — the one var both the server and the in-browser admin can see, so they agree
+  on the storage kind. Set it alongside `KEYSTATIC_GITHUB_CLIENT_ID`,
+  `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` on the host. Until the slug
+  is set it falls back to `local` so builds never break. Each site has its own App
+  → its own login → no content mixing. (Create the App manually at
+  `github.com/settings/apps/new` — the in-product wizard is unreliable under Next 16.)
 - Set `metadataBase` in your root layout so cover images resolve to absolute
   URLs in OpenGraph/Twitter tags.
 

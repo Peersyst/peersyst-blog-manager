@@ -54,20 +54,35 @@ export function createBlogReader(keystaticConfig: unknown) {
     };
   }
 
+  /** Resolve a Markdoc body field (function or value) and render it to HTML. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function renderBody(entry: any): Promise<string> {
+    const content =
+      typeof entry.body === "function" ? await entry.body() : entry.body;
+    return Markdoc.renderers.html(Markdoc.transform(content.node));
+  }
+
   return {
     /** Slugs of every post — feed to generateStaticParams. */
     async getPostSlugs(): Promise<string[]> {
       return collections.posts.list();
     },
 
-    /** All posts, newest first. */
-    async getAllPosts(): Promise<BlogPost[]> {
+    /**
+     * All posts, newest first. By default each post carries metadata only.
+     * Pass `{ withBody: true }` to also render every post's HTML `body` (e.g.
+     * for reading-time estimates) — note this resolves and renders every entry,
+     * so it's O(N) reads at build time.
+     */
+    async getAllPosts(opts?: { withBody?: boolean }): Promise<BlogPost[]> {
       const all = await collections.posts.all();
       const posts = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        all.map(async ({ slug, entry }: any) =>
-          normalize(slug, entry, await resolveAuthor(entry.author)),
-        ),
+        all.map(async ({ slug, entry }: any) => {
+          const post = normalize(slug, entry, await resolveAuthor(entry.author));
+          if (opts?.withBody) post.body = await renderBody(entry);
+          return post;
+        }),
       );
       return posts.sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
     },
@@ -76,10 +91,10 @@ export function createBlogReader(keystaticConfig: unknown) {
     async getPost(slug: string): Promise<BlogPost | null> {
       const entry = await collections.posts.read(slug);
       if (!entry) return null;
-      const content =
-        typeof entry.body === "function" ? await entry.body() : entry.body;
-      const html = Markdoc.renderers.html(Markdoc.transform(content.node));
-      return { ...normalize(slug, entry, await resolveAuthor(entry.author)), body: html };
+      return {
+        ...normalize(slug, entry, await resolveAuthor(entry.author)),
+        body: await renderBody(entry),
+      };
     },
   };
 }
